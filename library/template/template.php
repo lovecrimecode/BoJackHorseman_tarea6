@@ -9,10 +9,10 @@ class Template {
      }
 
      public function __construct() {
-          require("template/header.php");
+          require("header.php");
      }
      public function __destruct() {
-          require("template/footer.php");
+          require("footer.php");
      }
 }
 ?>

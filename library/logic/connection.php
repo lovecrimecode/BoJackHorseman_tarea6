@@ -25,15 +25,15 @@ class Connection {
                self::$instance = new Connection();
           }
           return self::$instance;
-     }
+     }    
 
      //CREATE
-     public static function insert_character($sql, $params = [] ) {
+     public static function insert_character($id, $name, $color, $species, $fame_level, $photo) {
           // Implement insert_character function here
           $connection = self::getInstance()->connection;
           $sql = "INSERT INTO characters (name, color, species, fame_level, photo) VALUES (:name, :color, :species, :fame_level, :photo)";
           $stmt = $connection->prepare($sql);
-          $stmt->execute($params);
+          $stmt->execute(['id' => $id, 'name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
           return $connection->lastInsertId();
      }
      
@@ -52,34 +52,35 @@ class Connection {
           $connection = self::getInstance()->connection;
           $sql = "SELECT * FROM characters WHERE id = :id";
           $stmt = $connection->prepare($sql);
-          $stmt->execute(['id' => $id]); //por que asi?
-          return $stmt->fetch(PDO::FETCH_ASSOC);
+          $stmt->execute(['id' => $id]);
+          return $stmt->rowCount();
      }
 
      //UPDATE
-     public static function update_character($sql, $id, $name, $color, $species, $fame_level, $photo) {
+     public static function update_character($id, $name, $color, $species, $fame_level, $photo)
+     {
           $connection = self::getInstance()->connection;
           $sql = "UPDATE characters SET name = :name, color = :color, species = :species, fame_level = :fame_level, photo = :photo WHERE id = :id";
           $stmt = $connection->prepare($sql);
-          $stmt->execute(['name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
-          return $stmt->rowCount(); //revisar
+          $stmt->execute(['id' => $id, 'name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
+          return $stmt->rowCount();
      }
 
+
      //DELETE
-     public function delete_character ($id) {
+     public static function delete_character ($id) {
           $connection = self::getInstance()->connection;
           $sql = "DELETE FROM characters WHERE id = :id";
           $stmt = $connection->prepare($sql);
           return $stmt->execute(['id' => $id]);
      }
 
-     // static function exec ($sql, $params = []) {
-     //      // Implement exec function here
-     //      $connection = Connection::getInstance()->connection;
-     //      $stmt = $connection->prepare($sql);
-     //      $stmt->execute($params);
-     //      return $stmt->rowCount();
-     // }
-
+     public static function exec($sql, $params = [])
+     {
+          $connection = self::getInstance()->connection;
+          $stmt = $connection->prepare($sql);
+          $stmt->execute($params);
+          return $stmt->rowCount();
+     }
 }
 ?>
