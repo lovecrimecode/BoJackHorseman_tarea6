@@ -1,5 +1,5 @@
 <?php
-require('db_config');
+require('/logic/db_config');
 
 class Connection {
 
