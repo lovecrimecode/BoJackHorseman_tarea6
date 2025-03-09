@@ -1,23 +1,57 @@
 <?php
-require('/logic/db_config');
+ob_start();
 
-class Connection {
-
-     private static $instance;   // Almacena la única instancia de la conexión
-     public $connection;         // Mantiene la conexión activa con MySQL
-
-     public function __construct() {
-     try {
-        $this->connection = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
-     } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
-            exit;
-        }
+// Verificar si el archivo db_config.php existe
+if (file_exists('db_config.php')) {
+     // Si no existe, mostrar el formulario para crear el archivo
+     require_once 'db_config.php';
+} else {
+     define('DB_HOST', '');
+     define('DB_USER', '');
+     define('DB_PASS', '');
+     define('DB_NAME', '');
 }
-    public function __destruct()
-    {
-            $this->connection = null; // Cierra la conexión al destruir el objeto
-    }
+
+class Connection
+{
+     private static $instance; // La única instancia de la conexión
+     public $connection; // Conexión activa con MySQL
+
+     public function __construct()
+     {
+          // Validar si las constantes están definidas antes de usarlas
+          if (!defined('DB_HOST') || !defined('DB_USER') || !defined('DB_PASS') || !defined('DB_NAME')) {
+               header("Location: install.php?error=db_config_missing");
+               exit;
+          }
+
+          // Validar si los datos de conexión están vacíos
+          if (empty(DB_HOST) || empty(DB_USER)) {
+               header("Location: install.php?error=db_config_incomplete");
+               exit;
+          }
+
+          try {
+               // Crear conexión a MySQL
+               $dsn = "mysql:host=" . DB_HOST . ";charset=utf8mb4";
+               $this->connection = new PDO($dsn, DB_USER, DB_PASS, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+               ]);
+
+               // Si DB_NAME está definido, intentar usarlo
+               if (defined('DB_NAME') && !empty(DB_NAME)) {
+                    $stmt = $this->connection->query("SHOW DATABASES LIKE '" . DB_NAME . "'");
+                    if ($stmt->rowCount() == 0) {
+                         header("Location: install.php?error=database_not_found&dbname=" . DB_NAME);
+                         exit;
+                    }
+                    $this->connection->exec("USE " . DB_NAME);
+               }
+          } catch (PDOException $e) {
+               die("<p style='color: red;'>❌ Error en la conexión: " . $e->getMessage() . "</p>");
+          }
+     }
 
      public static function getInstance()
      {
@@ -25,62 +59,53 @@ class Connection {
                self::$instance = new Connection();
           }
           return self::$instance;
-     }    
+     }
 
-     //CREATE
-     public static function insert_character($id, $name, $color, $species, $fame_level, $photo) {
-          // Implement insert_character function here
+     // Métodos CRUD (insertar, leer, actualizar, eliminar)
+     public static function insert_character($name, $color, $species, $fame_level, $photo)
+     {
           $connection = self::getInstance()->connection;
           $sql = "INSERT INTO characters (name, color, species, fame_level, photo) VALUES (:name, :color, :species, :fame_level, :photo)";
           $stmt = $connection->prepare($sql);
-          $stmt->execute(['id' => $id, 'name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
+          $stmt->execute(['name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
           return $connection->lastInsertId();
      }
-     
-     //READ ALL
-     public static function get_characters(){
-          // Implement get_characters function here
+
+     public static function get_characters()
+     {
           $connection = self::getInstance()->connection;
           $sql = "SELECT * FROM characters";
           $stmt = $connection->query($sql);
           return $stmt->fetchAll(PDO::FETCH_ASSOC);
      }
 
-     //READ ONE
-     public static function get_character_by_id($id){
-          // Implement get_character function here
+     public static function get_character_by_id($id)
+     {
           $connection = self::getInstance()->connection;
-          $sql = "SELECT * FROM characters WHERE id = :id";
+          $sql = "SELECT * FROM characters WHERE id = :id LIMIT 1";
           $stmt = $connection->prepare($sql);
           $stmt->execute(['id' => $id]);
-          return $stmt->rowCount();
+          return $stmt->fetch(PDO::FETCH_OBJ);
      }
 
-     //UPDATE
-     public static function update_character($id, $name, $color, $species, $fame_level, $photo)
+     public static function update_character($name, $color, $species, $fame_level, $photo)
      {
           $connection = self::getInstance()->connection;
           $sql = "UPDATE characters SET name = :name, color = :color, species = :species, fame_level = :fame_level, photo = :photo WHERE id = :id";
           $stmt = $connection->prepare($sql);
-          $stmt->execute(['id' => $id, 'name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
+          $stmt->execute(['name' => $name, 'color' => $color, 'species' => $species, 'fame_level' => $fame_level, 'photo' => $photo]);
           return $stmt->rowCount();
      }
 
-
-     //DELETE
-     public static function delete_character ($id) {
+     public static function delete_character($id)
+     {
           $connection = self::getInstance()->connection;
           $sql = "DELETE FROM characters WHERE id = :id";
           $stmt = $connection->prepare($sql);
-          return $stmt->execute(['id' => $id]);
-     }
-
-     public static function exec($sql, $params = [])
-     {
-          $connection = self::getInstance()->connection;
-          $stmt = $connection->prepare($sql);
-          $stmt->execute($params);
-          return $stmt->rowCount();
+          $stmt->execute(['id' => $id]);
+          return $stmt->rowCount() > 0;
      }
 }
+
+ob_end_flush();
 ?>
