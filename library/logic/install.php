@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_config'])) {
      $config_content .= "if (!defined('DB_HOST')) define('DB_HOST', '$db_host');\n";
      $config_content .= "if (!defined('DB_USER')) define('DB_USER', '$db_user');\n";
      $config_content .= "if (!defined('DB_PASS')) define('DB_PASS', '$db_pass');\n";
-     $config_content .= "define('DB_NAME', '$db_name');\n";
+     $config_content .= "if (!defined('DB_NAME')) define('DB_NAME', '$db_name');\n"; // ← AHORA SE VERIFICA DB_NAME
      $config_content .= "?>";
 
      file_put_contents('db_config.php', $config_content);

@@ -1,16 +1,5 @@
 <?php
-ob_start();
-
-// Verificar si el archivo db_config.php existe
-if (file_exists('db_config.php')) {
-     // Si no existe, mostrar el formulario para crear el archivo
      require_once 'db_config.php';
-} else {
-     define('DB_HOST', '');
-     define('DB_USER', '');
-     define('DB_PASS', '');
-     define('DB_NAME', '');
-}
 
 class Connection
 {
@@ -20,14 +9,14 @@ class Connection
      public function __construct()
      {
           // Validar si las constantes están definidas antes de usarlas
-          if (!defined('DB_HOST') || !defined('DB_USER') || !defined('DB_PASS') || !defined('DB_NAME')) {
-               header("Location: install.php?error=db_config_missing");
+          if (!defined('DB_HOST') || !defined('DB_USER') || !defined('DB_NAME')) {
+               header("Location: install.php");
                exit;
           }
 
           // Validar si los datos de conexión están vacíos
           if (empty(DB_HOST) || empty(DB_USER)) {
-               header("Location: install.php?error=db_config_incomplete");
+               header("Location: install.php");
                exit;
           }
 
@@ -43,7 +32,7 @@ class Connection
                if (defined('DB_NAME') && !empty(DB_NAME)) {
                     $stmt = $this->connection->query("SHOW DATABASES LIKE '" . DB_NAME . "'");
                     if ($stmt->rowCount() == 0) {
-                         header("Location: install.php?error=database_not_found&dbname=" . DB_NAME);
+                         header("Location: install.php" . DB_NAME);
                          exit;
                     }
                     $this->connection->exec("USE " . DB_NAME);
@@ -106,6 +95,4 @@ class Connection
           return $stmt->rowCount() > 0;
      }
 }
-
-ob_end_flush();
 ?>

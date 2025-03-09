@@ -4,10 +4,13 @@ if (!file_exists('library/logic/db_config.php')) {
      header("Location: library/logic/install.php");
      exit;
 }
-
+else if (!file_exists('db_config.php')) {
+     echo "Redirecting to install.php";
+     header("Location: install.php");
+     exit;
+}
 // Incluir los archivos necesarios
 require('library/template/template.php');
-require('library/motor.php');
 require_once 'library/logic/db_config.php';
 require_once 'library/logic/connection.php';
 
@@ -28,4 +31,4 @@ $characters = Connection::get_characters();
           echo "<p class='text-center'>No hay personajes disponibles.</p>";
      }
      ?>
-</div>
+</div> 

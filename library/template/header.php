@@ -42,12 +42,6 @@
                padding: 0;
           }
 
-
-          /* h2 {
-               color: #ffcc00;
-               /* Amarillo BoJack 
-          } */
-
           .table {
                background-color: #444;
                   border-radius: 10px;
