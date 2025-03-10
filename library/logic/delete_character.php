@@ -1,5 +1,5 @@
 <?php
-require_once 'connection.php'; // Ajusta la ruta según tu estructura
+require_once ('connection.php'); // Ajusta la ruta según tu estructura
 
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
      $id = $_GET['id'];
